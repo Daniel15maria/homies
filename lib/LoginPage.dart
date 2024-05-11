@@ -54,6 +54,7 @@ class _LoginPageState extends State<LoginPage> {
                           Size((MediaQuery.of(context).size.width) - 100, 45),
                     ),
                     onPressed: () {
+                      print(MediaQuery.of(context).size.width);
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => HomeNavPage()),

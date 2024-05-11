@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:homies/BottomNavBar/CleanPage.dart';
 import 'package:homies/BottomNavBar/HomePage.dart';
+import 'package:homies/BottomNavBar/PetrolPage.dart';
+import 'package:homies/BottomNavBar/SpinPage.dart';
 import 'package:homies/SideNavBar/SideNavBar.dart';
 
 class HomeNavPage extends StatefulWidget {
@@ -14,9 +17,9 @@ class _HomeNavPageState extends State<HomeNavPage> {
   int _currentindex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
     HomePage(),
-    Text("Clean"),
-    Text("Petrol"),
-    Text("Spin"),
+    CleanPage(),
+    PetrolPage(),
+    SpinWheel(),
   ];
 
   @override

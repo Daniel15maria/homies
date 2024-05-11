@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homies/SideNavBar/Notifify.dart';
 
 class SideBar extends StatefulWidget {
   const SideBar({Key? key}) : super(key: key);
@@ -47,7 +48,11 @@ class _SideBarState extends State<SideBar> {
             leading: Icon(Icons.notifications),
             title: Text('Reminders'),
             onTap: () {
-              Navigator.pop(context);
+              print(MediaQuery.of(context).size.width);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotifyPage()),
+              );
             },
           ),
           Divider(),
