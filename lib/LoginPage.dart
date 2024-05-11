@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/login-bg.png'),
+                image: AssetImage('assets/login-bg1.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -33,10 +33,13 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  SizedBox(
+                    height: 80,
+                  ),
                   Text('Homies',
                       style: GoogleFonts.oleoScriptSwashCaps(
                           textStyle: TextStyle(
-                        color: Color(0xFF010108),
+                        color: Color.fromARGB(255, 254, 254, 255),
                         fontSize: 57.35,
                         fontFamily: 'Oleo Script Swash Caps',
                         fontWeight: FontWeight.w700,

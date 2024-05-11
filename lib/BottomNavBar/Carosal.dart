@@ -36,6 +36,19 @@ class _CarouselCommunitiesState extends State<CarouselCommunities> {
       'assets/homies11.jpeg',
       'assets/homies11.jpeg',
       'assets/homies11.jpeg',
+      'assets/homies3.jpg',
+      'assets/homies4.jpg',
+      'assets/homies1.jpg',
+      'assets/homies12.jpg',
+      'assets/homies5.jpg',
+      'assets/homies6.jpg',
+      'assets/homies7.jpg',
+      'assets/homies2.jpg',
+      'assets/homies8.jpg',
+      'assets/homies9.jpg',
+      'assets/homies10.jpg',
+      'assets/homies11.jpg',
+>>>>>>> 92c2bb00a2ebef432216ff2fb81e665ad1600919
     ];
 
     return imageUrls

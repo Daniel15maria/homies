@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
       TextStyle _nameTextStyle(BuildContext context) {
         double screenWidth = MediaQuery.of(context).size.width;
         double scaleFactor = screenWidth > 600 ? 1.5 : 1.0;
-        double fontSize = 20.0 * scaleFactor;
+        double fontSize = (MediaQuery.of(context).size.width) / 20;
         return TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: fontSize,
@@ -46,10 +46,10 @@ class _HomePageState extends State<HomePage> {
       TextStyle _descriptionTextStyle(BuildContext context) {
         double screenWidth = MediaQuery.of(context).size.width;
         double scaleFactor = screenWidth > 600 ? 1.5 : 1.0;
-        double fontSize = 15.0 * scaleFactor;
+        double fontSize = (MediaQuery.of(context).size.width) / 30;
         return TextStyle(
           color: Colors.black,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w300,
           fontSize: fontSize,
         );
       }
@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
       TextStyle _inchargeTextStyle(BuildContext context) {
         double screenWidth = MediaQuery.of(context).size.width;
         double scaleFactor = screenWidth > 600 ? 1.5 : 1.0;
-        double fontSize = 20.0 * scaleFactor;
+        double fontSize = (MediaQuery.of(context).size.width) / 27;
         return TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.w700,
@@ -216,7 +216,7 @@ class _HomePageState extends State<HomePage> {
                         description: '"Botha kai"',
                         incharge: "NILL",
                         context: context,
-                        imagePath: 'assets/deepak.png',
+                        imagePath: 'assets/deepak.jpg',
                       ),
                       SizedBox(height: 20),
                       _buildCard(
