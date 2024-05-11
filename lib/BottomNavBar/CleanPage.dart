@@ -31,97 +31,121 @@ class _CleanPageState extends State<CleanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-          height: 40,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            '“Make it Clean BOYS” ',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.black.withOpacity(0.8399999737739563),
-              fontSize: 35,
-              fontFamily: 'Roboto Slab',
-              fontWeight: FontWeight.w700,
-              height: 0.04,
-              letterSpacing: 1.81,
-            ),
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+                'assets/clean-bg.jpg'), // Replace 'background_image.jpg' with your image asset path
+            fit: BoxFit.cover,
           ),
         ),
-        SizedBox(
-          height: 25,
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: 75,
             ),
-            backgroundColor: Color(0xFF002D56),
-            foregroundColor: Colors.white,
-            fixedSize: Size(MediaQuery.of(context).size.width - 150, 50),
-          ),
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return Clean();
-              },
-            );
-          },
-          child: Text('Button'),
-        ),
-        SizedBox(
-          height: 25,
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: lists.length, // Updated itemCount
-            itemBuilder: (context, index) {
-              return Card(
-                elevation: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Image.asset(
-                      'assets/dani.jpg',
-                      fit: BoxFit.cover,
-                    ),
-                    ListTile(
-                      title: Text(lists[index].name),
-                      subtitle: Text(lists[index].desc),
-                      trailing: Column(
-                        children: [
-                          Text("Kitchen"),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  increament(index);
-                                },
-                                icon: Icon(Icons.favorite),
-                                color: lists[index].isLiked
-                                    ? Colors.red
-                                    : Colors.grey,
-                              ),
-                              Text(lists[index].itemCount.toString())
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                '“Make it Clean BOYS” ',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: const Color.fromARGB(255, 248, 245, 245)
+                      .withOpacity(0.8399999737739563),
+                  fontSize: (MediaQuery.of(context).size.width) / 14,
+                  fontFamily: 'Roboto Slab',
+                  fontWeight: FontWeight.w700,
+                  height: 0.04,
+                  letterSpacing: 1.81,
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+            SizedBox(
+              height: 25,
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                backgroundColor: Color(0xFF002D56),
+                foregroundColor: Colors.white,
+                fixedSize: Size(MediaQuery.of(context).size.width - 150, 50),
+              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Clean();
+                  },
+                );
+              },
+              child: Text(
+                'Submit Proof',
+                style: TextStyle(fontSize: 25),
+              ),
+            ),
+            SizedBox(
+              height: 25,
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: lists.length, // Updated itemCount
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: [
+                      SizedBox(
+                        height: 50,
+                      ),
+                      Card(
+                        elevation: 4,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Image.asset(
+                              'assets/dani.jpg',
+                              fit: BoxFit.cover,
+                            ),
+                            ListTile(
+                              title: Text(lists[index].name),
+                              subtitle: Text(lists[index].desc),
+                              trailing: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    Text("Kitchen"),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          onPressed: () {
+                                            increament(index);
+                                          },
+                                          icon: Icon(Icons.favorite),
+                                          color: lists[index].isLiked
+                                              ? Colors.red
+                                              : Colors.grey,
+                                        ),
+                                        Text(lists[index].itemCount.toString())
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -161,7 +185,7 @@ class _CleanState extends State<Clean> {
               children: [
                 Container(
                   child: Text(
-                    'Enter Details',
+                    'Enter Cleaning Details?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF002D56),
@@ -203,12 +227,12 @@ class _CleanState extends State<Clean> {
                     ),
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                    hintText: "Enter Notification Title",
+                    hintText: "Enter Cleaned Place",
                     alignLabelWithHint: true,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a title';
+                      return 'Please enter the place';
                     }
                     return null;
                   },
@@ -232,15 +256,9 @@ class _CleanState extends State<Clean> {
                     ),
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                    hintText: "Enter Notification Message",
+                    hintText: "Cleaned With? (optional)",
                     alignLabelWithHint: true,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a message';
-                    }
-                    return null;
-                  },
                 ),
                 SizedBox(height: 16),
                 ElevatedButton(
