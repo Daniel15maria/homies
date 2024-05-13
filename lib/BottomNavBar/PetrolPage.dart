@@ -12,6 +12,8 @@ class _PetrolPageState extends State<PetrolPage> {
   final CollectionReference _petrol =
       FirebaseFirestore.instance.collection('petrol');
 
+  late String fromUser = ''; // Declare fromUser variable
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +57,14 @@ class _PetrolPageState extends State<PetrolPage> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      return PetrolDetails();
+                      return PetrolDetails(
+                        // Pass the function to update fromUser to PetrolDetails
+                        updateFromUser: (String value) {
+                          setState(() {
+                            fromUser = value;
+                          });
+                        },
+                      );
                     },
                   );
                 },
@@ -82,12 +91,10 @@ class _PetrolPageState extends State<PetrolPage> {
                       return Center(child: CircularProgressIndicator());
                     }
 
-                    var documents = snapshot.data!.docs;
-
                     return ListView.builder(
-                      itemCount: documents.length,
+                      itemCount: snapshot.data?.docs.length,
                       itemBuilder: (context, index) {
-                        var data = documents[index].data();
+                        var data = snapshot.data?.docs[index].data();
                         return Column(
                           children: [
                             SizedBox(
@@ -98,9 +105,10 @@ class _PetrolPageState extends State<PetrolPage> {
                               child: Padding(
                                 padding: const EdgeInsets.all(10.0),
                                 child: ListTile(
-                                  title: Text(data['name']),
-                                  subtitle: Text(data['time_stamp'].toString()),
-                                  trailing: Text('₹ ${data['amount']}'),
+                                  title: Text(data?['name'] ?? ''),
+                                  subtitle: Text(
+                                      data?['time_stamp']?.toString() ?? ''),
+                                  trailing: Text('₹ ${data?['amount'] ?? ''}'),
                                   leading: CircleAvatar(
                                     backgroundColor: Colors.black,
                                   ),
@@ -123,7 +131,9 @@ class _PetrolPageState extends State<PetrolPage> {
 }
 
 class PetrolDetails extends StatefulWidget {
-  const PetrolDetails({super.key});
+  final Function(String) updateFromUser; // Define function to update fromUser
+
+  const PetrolDetails({required this.updateFromUser, Key? key});
 
   @override
   State<PetrolDetails> createState() => _PetrolDetailsState();
@@ -134,6 +144,7 @@ class _PetrolDetailsState extends State<PetrolDetails> {
 
   TextEditingController _titleController = TextEditingController();
   TextEditingController _messageController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -200,6 +211,8 @@ class _PetrolDetailsState extends State<PetrolDetails> {
                 ),
                 onPressed: () async {
                   {
+                    // Update fromUser with the entered value
+                    widget.updateFromUser(_titleController.text);
                     Navigator.pop(context);
                   }
                 },
