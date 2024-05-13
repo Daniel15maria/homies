@@ -49,7 +49,7 @@ class _SpinWheelState extends State<SpinWheel> {
                 padding: const EdgeInsets.symmetric(vertical: 160),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       "Spin And Choose",
@@ -62,6 +62,9 @@ class _SpinWheelState extends State<SpinWheel> {
                         height: 0.04,
                         letterSpacing: 1.81,
                       ),
+                    ),
+                    SizedBox(
+                      height: 40,
                     ),
                     GestureDetector(
                       onTap: () {
@@ -80,6 +83,9 @@ class _SpinWheelState extends State<SpinWheel> {
                           ),
                         ),
                       ),
+                    ),
+                    SizedBox(
+                      height: 40,
                     ),
                     SizedBox(
                       height: 300,
