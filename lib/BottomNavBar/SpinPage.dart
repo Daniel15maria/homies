@@ -38,7 +38,7 @@ class _SpinWheelState extends State<SpinWheel> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/spin-bg.jpg"),
+            image: AssetImage("assets/spin.jpg"),
             fit: BoxFit.cover,
           ),
         ),

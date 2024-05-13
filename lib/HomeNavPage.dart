@@ -25,18 +25,20 @@ class _HomeNavPageState extends State<HomeNavPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       drawer: SideBar(),
       appBar: AppBar(
         title: Text("Homies",
             style: GoogleFonts.oleoScriptSwashCaps(
               color: Colors.white,
             )),
-        backgroundColor: Color(0xFF002D56),
+        backgroundColor: Colors.black.withOpacity(0.2),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: _widgetOptions[_currentindex], // Display the selected widget
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Color(0xFF002D56),
+        backgroundColor: Colors.black.withOpacity(0.2),
         unselectedItemColor: Colors.white, // Set the unselected icon color
         selectedItemColor: const Color.fromARGB(
             255, 171, 171, 171), // Set the selected icon color

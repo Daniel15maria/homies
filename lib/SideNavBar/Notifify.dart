@@ -43,7 +43,7 @@ class _NotifyPageState extends State<NotifyPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("your_background_image.jpg"),
+            image: AssetImage("assets/remainder-bg.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -58,6 +58,7 @@ class _NotifyPageState extends State<NotifyPage> {
                     height: 29,
                   ),
                   Card(
+                    color: Colors.white.withOpacity(0.4),
                     elevation: 4,
                     child: ListTile(
                       title: Column(

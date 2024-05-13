@@ -92,55 +92,59 @@ class _CleanPageState extends State<CleanPage> {
               height: 25,
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: lists.length, // Updated itemCount
-                itemBuilder: (context, index) {
-                  return Column(
-                    children: [
-                      SizedBox(
-                        height: 50,
-                      ),
-                      Card(
-                        elevation: 4,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Image.asset(
-                              'assets/dani.jpg',
-                              fit: BoxFit.cover,
-                            ),
-                            ListTile(
-                              title: Text(lists[index].name),
-                              subtitle: Text(lists[index].desc),
-                              trailing: SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    Text("Kitchen"),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          onPressed: () {
-                                            increament(index);
-                                          },
-                                          icon: Icon(Icons.favorite),
-                                          color: lists[index].isLiked
-                                              ? Colors.red
-                                              : Colors.grey,
-                                        ),
-                                        Text(lists[index].itemCount.toString())
-                                      ],
-                                    ),
-                                  ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: ListView.builder(
+                  itemCount: lists.length, // Updated itemCount
+                  itemBuilder: (context, index) {
+                    return Column(
+                      children: [
+                        SizedBox(
+                          height: 50,
+                        ),
+                        Card(
+                          elevation: 4,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Image.asset(
+                                'assets/dani.jpg',
+                                fit: BoxFit.cover,
+                              ),
+                              ListTile(
+                                title: Text(lists[index].name),
+                                subtitle: Text(lists[index].desc),
+                                trailing: SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      Text("Kitchen"),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            onPressed: () {
+                                              increament(index);
+                                            },
+                                            icon: Icon(Icons.favorite),
+                                            color: lists[index].isLiked
+                                                ? Colors.red
+                                                : Colors.grey,
+                                          ),
+                                          Text(
+                                              lists[index].itemCount.toString())
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ],
