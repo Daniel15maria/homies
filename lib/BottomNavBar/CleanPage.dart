@@ -2,10 +2,12 @@
 
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:firebase_storage/firebase_storage.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class CleanPage extends StatelessWidget {
   const CleanPage({Key? key}) : super(key: key);
@@ -124,8 +126,8 @@ class _CleanCardState extends State<CleanCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Image.asset(
-            'assets/dani.jpg',
+          Image.network(
+            widget.data['imageUrl'],
             fit: BoxFit.cover,
           ),
           ListTile(
@@ -176,7 +178,6 @@ class _CleanCardState extends State<CleanCard> {
       if (!snapshot.exists) {
         throw Exception('Document does not exist!');
       }
-
       transaction.update(documentReference, {'likes': likes});
     });
   }
@@ -196,8 +197,23 @@ class _CleanState extends State<Clean> {
   Uint8List? _image;
   File? selectedImage;
   final CollectionReference _clean =
-      FirebaseFirestore.instance.collection('clean');
+      FirebaseFirestore.instance.collection('cleaning');
   String imageUrl = '';
+  late User? _user;
+  bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUser();
+  }
+
+  Future<void> _fetchUser() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _user = currentUser;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +255,7 @@ class _CleanState extends State<Clean> {
                         size: 90,
                       )),
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _titleController,
                   decoration: InputDecoration(
@@ -291,23 +308,31 @@ class _CleanState extends State<Clean> {
                   ),
                 ),
                 SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(13),
-                    ),
-                    backgroundColor: Color(0xFF002D56),
-                    foregroundColor: Colors.white,
-                    fixedSize: const Size(350, 50),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      await sendToFirebase();
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Text('SEND'),
-                ),
+                _isUploading
+                    ? CircularProgressIndicator() // Show circular progress indicator while uploading
+                    : ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          backgroundColor: Color(0xFF002D56),
+                          foregroundColor: Colors.white,
+                          fixedSize: const Size(350, 50),
+                        ),
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            setState(() {
+                              _isUploading = true;
+                            });
+                            await sendToFirebase();
+                            setState(() {
+                              _isUploading = false;
+                            });
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: Text('SEND'),
+                      ),
               ],
             ),
           ),
@@ -398,13 +423,17 @@ class _CleanState extends State<Clean> {
   Future<void> sendToFirebase() async {
     try {
       if (_image != null) {
+        print('Selected Image: $_image');
         await uploadImageToStorage();
       }
+      String googleUserName = _user?.displayName ?? 'No Name';
+
       await _clean.add({
-        'name': _titleController.text,
-        'time': Timestamp.now(),
-        'cleanedPlace': _messageController.text,
+        'name': googleUserName,
+        'time_stamp': Timestamp.now(),
+        'area': _titleController.text,
         'imageUrl': imageUrl,
+        'likes': 0,
       });
     } catch (e) {
       print('Error sending to Firebase: $e');
@@ -413,13 +442,24 @@ class _CleanState extends State<Clean> {
 
   Future<void> uploadImageToStorage() async {
     try {
+      final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final Reference storageReference =
-          FirebaseStorage.instance.ref().child('cleaning_images');
+          FirebaseStorage.instance.ref().child('cleaning_images/$timestamp');
       final UploadTask uploadTask = storageReference.putFile(selectedImage!);
+      setState(() {
+        _isUploading = true;
+      });
       await uploadTask.whenComplete(() async {
         imageUrl = await storageReference.getDownloadURL();
+        setState(() {
+          _isUploading = false;
+        });
       });
+      print('Image URL: $imageUrl');
     } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
       print('Error uploading image to Firebase Storage: $e');
     }
   }
