@@ -75,14 +75,13 @@ class _PetrolPageState extends State<PetrolPage> {
                 ),
               ),
             ),
-            SizedBox(
-              height: 30,
-            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: StreamBuilder(
-                  stream: _petrol.snapshots(),
+                  stream: _petrol
+                      .orderBy('time_stamp', descending: true)
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
@@ -91,18 +90,17 @@ class _PetrolPageState extends State<PetrolPage> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator());
                     }
+
                     var documents = snapshot.data!.docs;
+
                     return ListView.builder(
                       itemCount: documents.length,
-                      reverse: true,
                       itemBuilder: (context, index) {
                         var data =
                             documents[index].data() as Map<String, dynamic>;
                         return Column(
                           children: [
-                            SizedBox(
-                              height: 5,
-                            ),
+                            SizedBox(height: 5),
                             Card(
                               color: Colors.white.withOpacity(0.6),
                               child: Padding(
@@ -111,8 +109,9 @@ class _PetrolPageState extends State<PetrolPage> {
                                   title: Text(
                                     data['name'],
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black),
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                   subtitle: Text(
                                     '${formattedTimestamp(data['time_stamp'].toDate())}',
@@ -122,9 +121,10 @@ class _PetrolPageState extends State<PetrolPage> {
                                   trailing: Text(
                                     '₹ ${data['amount']}',
                                     style: TextStyle(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 18,
-                                        color: Colors.black),
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 18,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                   leading: CircleAvatar(
                                     backgroundImage:
@@ -177,17 +177,6 @@ class _PetrolDetailsState extends State<PetrolDetails> {
     });
   }
 
-  String? _validateAmount(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter an amount';
-    }
-    int amount = int.tryParse(value) ?? 0;
-    if (amount <= 25) {
-      return 'Fill petrol more than ₹25';
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -237,7 +226,15 @@ class _PetrolDetailsState extends State<PetrolDetails> {
                   hintText: "Enter Amount",
                   alignLabelWithHint: true,
                 ),
-                validator: _validateAmount,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an amount';
+                  }
+                  if (int.parse(value) < 26) {
+                    return 'Please fill petrol more than 25 rupees';
+                  }
+                  return null;
+                },
               ),
               SizedBox(height: 16),
               ElevatedButton(
@@ -250,30 +247,28 @@ class _PetrolDetailsState extends State<PetrolDetails> {
                   fixedSize: const Size(350, 50),
                 ),
                 onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    // Get the current timestamp
-                    var now = DateTime.now();
+                  // Get the current timestamp
+                  var now = DateTime.now();
 
-                    // Get the Google username and user photo
-                    String googleUserName = _user?.displayName ?? 'No Name';
-                    String userPhotoUrl = _user!.photoURL!;
+                  // Get the Google username and user photo
+                  String googleUserName = _user?.displayName ?? 'No Name';
+                  String userPhotoUrl = _user!.photoURL!;
 
-                    // Send the data to Firestore
-                    await _petrol.add({
-                      'amount': int.parse(_titleController.text),
-                      'time_stamp': now,
-                      'name': googleUserName,
-                      'photoUrl': userPhotoUrl,
-                    });
+                  // Send the data to Firestore
+                  await _petrol.add({
+                    'amount': int.parse(_titleController.text),
+                    'time_stamp': now,
+                    'name': googleUserName,
+                    'photoUrl': userPhotoUrl,
+                  });
 
-                    // Close the dialog
-                    Navigator.pop(context);
-                  }
+                  // Close the dialog
+                  Navigator.pop(context);
                 },
                 child: Text('SEND'),
               ),
               SizedBox(
-                height: 20,
+                height: 5,
               ),
             ],
           ),

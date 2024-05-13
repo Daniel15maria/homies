@@ -123,7 +123,11 @@ class _SpinWheelState extends State<SpinWheel> {
                                     ),
                                     Text(
                                       rewards.toString() + ", Your Turn to GO",
-                                      style: TextStyle(fontSize: 20),
+                                      style: TextStyle(
+                                          fontSize: (MediaQuery.of(context)
+                                                  .size
+                                                  .width) /
+                                              20),
                                     ),
                                     ElevatedButton(
                                       onPressed: () {

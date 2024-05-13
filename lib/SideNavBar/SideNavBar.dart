@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:homies/LoginPage.dart';
 import 'package:homies/SideNavBar/Notifify.dart';
+import 'package:homies/SideNavBar/Photos.dart';
 
 class SideBar extends StatefulWidget {
   const SideBar({Key? key}) : super(key: key);
@@ -86,10 +87,11 @@ class _SideBarState extends State<SideBar> {
             leading: Icon(Icons.image),
             title: Text("Photos"),
             onTap: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => MapPage()),
-              // );
+              print(MediaQuery.of(context).size.width);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Photos()),
+              );
             },
           ),
           ListTile(

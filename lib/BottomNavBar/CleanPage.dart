@@ -1,33 +1,14 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:io';
 import 'dart:typed_data';
-
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class CleanPage extends StatefulWidget {
-  const CleanPage({Key? key});
-
-  @override
-  State<CleanPage> createState() => _CleanPageState();
-}
-
-class _CleanPageState extends State<CleanPage> {
-  List<ListModel> lists = [
-    ListModel("Daniel", "10:30", 0),
-    ListModel("Chandru", "4:20 pm", 0),
-    ListModel("Jaga", "3:20 am", 0),
-    ListModel("Daniel", "3:30 pm", 0),
-  ];
-  increament(int index) {
-    setState(() {
-      lists[index].isLiked = !lists[index].isLiked;
-      if (lists[index].isLiked) {
-        lists[index].itemCount += 1;
-      } else {
-        lists[index].itemCount -= 1;
-      }
-    });
-  }
+class CleanPage extends StatelessWidget {
+  const CleanPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +16,7 @@ class _CleanPageState extends State<CleanPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage(
-                'assets/clean-bg.jpg'), // Replace 'background_image.jpg' with your image asset path
+            image: AssetImage('assets/clean-bg.jpg'),
             fit: BoxFit.cover,
           ),
         ),
@@ -44,9 +24,7 @@ class _CleanPageState extends State<CleanPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(
-              height: 125,
-            ),
+            SizedBox(height: 125),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -63,9 +41,7 @@ class _CleanPageState extends State<CleanPage> {
                 ),
               ),
             ),
-            SizedBox(
-              height: 25,
-            ),
+            SizedBox(height: 25),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -91,56 +67,29 @@ class _CleanPageState extends State<CleanPage> {
               ),
             ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: ListView.builder(
-                  itemCount: lists.length, // Updated itemCount
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        Card(
-                          elevation: 4,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Image.asset(
-                                'assets/dani.jpg',
-                                fit: BoxFit.cover,
-                              ),
-                              ListTile(
-                                title: Text(lists[index].name),
-                                subtitle: Text(lists[index].desc),
-                                trailing: SingleChildScrollView(
-                                  child: Column(
-                                    children: [
-                                      Text("Kitchen"),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            onPressed: () {
-                                              increament(index);
-                                            },
-                                            icon: Icon(Icons.favorite),
-                                            color: lists[index].isLiked
-                                                ? Colors.red
-                                                : Colors.grey,
-                                          ),
-                                          Text(
-                                              lists[index].itemCount.toString())
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('cleaning')
+                    .snapshots(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasError) {
+                    return Text('Something went wrong');
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  return ListView(
+                    children:
+                        snapshot.data!.docs.map((DocumentSnapshot document) {
+                      Map<String, dynamic> data =
+                          document.data() as Map<String, dynamic>;
+                      return CleanCard(document: document, data: data);
+                    }).toList(),
+                  );
+                },
               ),
             ),
           ],
@@ -150,16 +99,91 @@ class _CleanPageState extends State<CleanPage> {
   }
 }
 
-class ListModel {
-  String name;
-  String desc;
-  int itemCount;
+class CleanCard extends StatefulWidget {
+  final DocumentSnapshot document;
+  final Map<String, dynamic> data;
+
+  const CleanCard({
+    Key? key,
+    required this.document,
+    required this.data,
+  }) : super(key: key);
+
+  @override
+  State<CleanCard> createState() => _CleanCardState();
+}
+
+class _CleanCardState extends State<CleanCard> {
   bool isLiked = false;
-  ListModel(this.name, this.desc, this.itemCount);
+  int likesCount = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Image.asset(
+            'assets/dani.jpg',
+            fit: BoxFit.cover,
+          ),
+          ListTile(
+            title: Text(widget.data['name']),
+            // subtitle: Text(data['time_stamp']),
+            trailing: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Text(widget.data['area']),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.thumb_up),
+                        color: isLiked ? Colors.blue : Colors.grey,
+                        onPressed: () {
+                          setState(() {
+                            isLiked = !isLiked;
+                            if (isLiked) {
+                              likesCount++;
+                              incrementLikes(widget.document.id, likesCount);
+                            } else {
+                              likesCount--;
+                              incrementLikes(widget.document.id, likesCount);
+                            }
+                          });
+                        },
+                      ),
+                      Text(widget.data['likes'].toString())
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> incrementLikes(String documentId, int likes) async {
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('cleaning').doc(documentId);
+
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(documentReference);
+
+      if (!snapshot.exists) {
+        throw Exception('Document does not exist!');
+      }
+
+      transaction.update(documentReference, {'likes': likes});
+    });
+  }
 }
 
 class Clean extends StatefulWidget {
-  const Clean({super.key});
+  const Clean({Key? key});
 
   @override
   State<Clean> createState() => _CleanState();
@@ -167,11 +191,14 @@ class Clean extends StatefulWidget {
 
 class _CleanState extends State<Clean> {
   final _formKey = GlobalKey<FormState>();
-
   TextEditingController _titleController = TextEditingController();
   TextEditingController _messageController = TextEditingController();
   Uint8List? _image;
-  File? selectedIMage;
+  File? selectedImage;
+  final CollectionReference _clean =
+      FirebaseFirestore.instance.collection('clean');
+  String imageUrl = '';
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -199,6 +226,9 @@ class _CleanState extends State<Clean> {
                 SizedBox(
                   height: 20,
                 ),
+                selectedImage != null
+                    ? Image.file(selectedImage!)
+                    : Container(), // Show image preview if selected
                 Container(
                   child: IconButton(
                       onPressed: () {
@@ -271,7 +301,8 @@ class _CleanState extends State<Clean> {
                     fixedSize: const Size(350, 50),
                   ),
                   onPressed: () async {
-                    {
+                    if (_formKey.currentState!.validate()) {
+                      await sendToFirebase();
                       Navigator.pop(context);
                     }
                   },
@@ -340,27 +371,56 @@ class _CleanState extends State<Clean> {
         });
   }
 
-//Gallery
+  //Gallery
   Future _pickImageFromGallery() async {
     final returnImage =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (returnImage == null) return;
     setState(() {
-      selectedIMage = File(returnImage.path);
+      selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
     });
     Navigator.of(context).pop(); //close the model sheet
   }
 
-//Camera
+  //Camera
   Future _pickImageFromCamera() async {
     final returnImage =
         await ImagePicker().pickImage(source: ImageSource.camera);
     if (returnImage == null) return;
     setState(() {
-      selectedIMage = File(returnImage.path);
+      selectedImage = File(returnImage.path);
       _image = File(returnImage.path).readAsBytesSync();
     });
     Navigator.of(context).pop();
+  }
+
+  Future<void> sendToFirebase() async {
+    try {
+      if (_image != null) {
+        await uploadImageToStorage();
+      }
+      await _clean.add({
+        'name': _titleController.text,
+        'time': Timestamp.now(),
+        'cleanedPlace': _messageController.text,
+        'imageUrl': imageUrl,
+      });
+    } catch (e) {
+      print('Error sending to Firebase: $e');
+    }
+  }
+
+  Future<void> uploadImageToStorage() async {
+    try {
+      final Reference storageReference =
+          FirebaseStorage.instance.ref().child('cleaning_images');
+      final UploadTask uploadTask = storageReference.putFile(selectedImage!);
+      await uploadTask.whenComplete(() async {
+        imageUrl = await storageReference.getDownloadURL();
+      });
+    } catch (e) {
+      print('Error uploading image to Firebase Storage: $e');
+    }
   }
 }
