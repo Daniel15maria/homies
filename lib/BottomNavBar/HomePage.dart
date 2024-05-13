@@ -103,10 +103,19 @@ class _HomePageState extends State<HomePage> {
                         description,
                         style: _descriptionTextStyle(context),
                       ),
-                      SizedBox(height: 30),
-                      Text(
-                        'Incharge : $incharge',
-                        style: _inchargeTextStyle(context),
+                      SizedBox(height: 25),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Incharge :',
+                            style: _inchargeTextStyle(context),
+                          ),
+                          Text(
+                            "$incharge",
+                            style: _inchargeTextStyle(context),
+                          )
+                        ],
                       ),
                     ],
                   ),
@@ -139,18 +148,15 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(height: 20),
-                      Card(
-                        color: Colors.white.withOpacity(0.5),
-                        child: Text(
-                          " WELCOME HOMIES! ",
-                          style: GoogleFonts.racingSansOne(
-                            textStyle: TextStyle(
-                              color: Color.fromARGB(255, 84, 18, 18),
-                              fontSize: MediaQuery.of(context).size.width / 14,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 6.31,
-                            ),
+                      SizedBox(height: 120),
+                      Text(
+                        " WELCOME HOMIES! ",
+                        style: GoogleFonts.racingSansOne(
+                          textStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: MediaQuery.of(context).size.width / 19,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 6.31,
                           ),
                         ),
                       ),
@@ -160,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(height: 20),
                       Card(
                         elevation: 0,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withOpacity(0.2),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(

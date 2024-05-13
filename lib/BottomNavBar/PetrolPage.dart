@@ -1,7 +1,15 @@
-// ignore_for_file: prefer_const_constructors
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+String formattedTimestamp(DateTime timestamp) {
+  String formattedDate = DateFormat('MMMM d, y').format(timestamp);
+  String formattedTime = DateFormat('h:mm a').format(timestamp);
+
+  return '$formattedTime \n$formattedDate';
+}
 
 class PetrolPage extends StatefulWidget {
   const PetrolPage({Key? key});
@@ -29,7 +37,7 @@ class _PetrolPageState extends State<PetrolPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              height: 30,
+              height: 100,
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -86,6 +94,7 @@ class _PetrolPageState extends State<PetrolPage> {
                     var documents = snapshot.data!.docs;
                     return ListView.builder(
                       itemCount: documents.length,
+                      reverse: true,
                       itemBuilder: (context, index) {
                         var data =
                             documents[index].data() as Map<String, dynamic>;
@@ -99,11 +108,28 @@ class _PetrolPageState extends State<PetrolPage> {
                               child: Padding(
                                 padding: const EdgeInsets.all(10.0),
                                 child: ListTile(
-                                  title: Text(data['name']),
-                                  subtitle: Text(data['time_stamp'].toString()),
-                                  trailing: Text('₹ ${data['amount']}'),
+                                  title: Text(
+                                    data['name'],
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black),
+                                  ),
+                                  subtitle: Text(
+                                    '${formattedTimestamp(data['time_stamp'].toDate())}',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  trailing: Text(
+                                    '₹ ${data['amount']}',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 18,
+                                        color: Colors.black),
+                                  ),
                                   leading: CircleAvatar(
-                                    backgroundColor: Colors.black,
+                                    backgroundImage:
+                                        NetworkImage(data['photoUrl']),
+                                    backgroundColor: Colors.transparent,
                                   ),
                                 ),
                               ),
@@ -124,7 +150,7 @@ class _PetrolPageState extends State<PetrolPage> {
 }
 
 class PetrolDetails extends StatefulWidget {
-  const PetrolDetails({super.key});
+  const PetrolDetails({Key? key});
 
   @override
   State<PetrolDetails> createState() => _PetrolDetailsState();
@@ -132,9 +158,36 @@ class PetrolDetails extends StatefulWidget {
 
 class _PetrolDetailsState extends State<PetrolDetails> {
   final _formKey = GlobalKey<FormState>();
+  final CollectionReference _petrol =
+      FirebaseFirestore.instance.collection('petrol');
 
   TextEditingController _titleController = TextEditingController();
-  TextEditingController _messageController = TextEditingController();
+  late User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUser();
+  }
+
+  Future<void> _fetchUser() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _user = currentUser;
+    });
+  }
+
+  String? _validateAmount(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter an amount';
+    }
+    int amount = int.tryParse(value) ?? 0;
+    if (amount <= 25) {
+      return 'Fill petrol more than ₹25';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -163,6 +216,8 @@ class _PetrolDetailsState extends State<PetrolDetails> {
               ),
               TextFormField(
                 controller: _titleController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
@@ -182,12 +237,7 @@ class _PetrolDetailsState extends State<PetrolDetails> {
                   hintText: "Enter Amount",
                   alignLabelWithHint: true,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
-                  }
-                  return null;
-                },
+                validator: _validateAmount,
               ),
               SizedBox(height: 16),
               ElevatedButton(
@@ -200,7 +250,23 @@ class _PetrolDetailsState extends State<PetrolDetails> {
                   fixedSize: const Size(350, 50),
                 ),
                 onPressed: () async {
-                  {
+                  if (_formKey.currentState!.validate()) {
+                    // Get the current timestamp
+                    var now = DateTime.now();
+
+                    // Get the Google username and user photo
+                    String googleUserName = _user?.displayName ?? 'No Name';
+                    String userPhotoUrl = _user!.photoURL!;
+
+                    // Send the data to Firestore
+                    await _petrol.add({
+                      'amount': int.parse(_titleController.text),
+                      'time_stamp': now,
+                      'name': googleUserName,
+                      'photoUrl': userPhotoUrl,
+                    });
+
+                    // Close the dialog
                     Navigator.pop(context);
                   }
                 },
