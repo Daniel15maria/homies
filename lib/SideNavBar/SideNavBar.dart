@@ -34,7 +34,7 @@ class _SideBarState extends State<SideBar> {
         children: [
           Container(
             width: double.infinity,
-            color: Color(0xFF002D56),
+            color: Color.fromARGB(255, 6, 6, 6),
             child: DrawerHeader(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

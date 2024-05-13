@@ -47,7 +47,7 @@ class _CleanPageState extends State<CleanPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              height: 75,
+              height: 125,
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -87,11 +87,10 @@ class _CleanPageState extends State<CleanPage> {
               },
               child: Text(
                 'Submit Proof',
-                style: TextStyle(fontSize: 25),
+                style: TextStyle(
+                  fontSize: (MediaQuery.of(context).size.width) / 22,
+                ),
               ),
-            ),
-            SizedBox(
-              height: 25,
             ),
             Expanded(
               child: Padding(
@@ -101,9 +100,6 @@ class _CleanPageState extends State<CleanPage> {
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
-                        SizedBox(
-                          height: 50,
-                        ),
                         Card(
                           elevation: 4,
                           child: Column(
