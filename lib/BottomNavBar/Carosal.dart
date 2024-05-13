@@ -31,6 +31,11 @@ class _CarouselCommunitiesState extends State<CarouselCommunities> {
 
   List<Widget> _generateCarouselItems() {
     List<String> imageUrls = [
+      'assets/homies11.jpeg',
+      'assets/homies11.jpeg',
+      'assets/homies11.jpeg',
+      'assets/homies11.jpeg',
+      'assets/homies11.jpeg',
       'assets/homies3.jpg',
       'assets/homies4.jpg',
       'assets/homies1.jpg',

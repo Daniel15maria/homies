@@ -140,14 +140,17 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(height: 20),
-                      Text(
-                        "WELCOME HOMIES",
-                        style: GoogleFonts.racingSansOne(
-                          textStyle: TextStyle(
-                            color: Color.fromARGB(255, 84, 18, 18),
-                            fontSize: MediaQuery.of(context).size.width / 14,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 6.31,
+                      Card(
+                        color: Colors.white.withOpacity(0.5),
+                        child: Text(
+                          " WELCOME HOMIES! ",
+                          style: GoogleFonts.racingSansOne(
+                            textStyle: TextStyle(
+                              color: Color.fromARGB(255, 84, 18, 18),
+                              fontSize: MediaQuery.of(context).size.width / 14,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 6.31,
+                            ),
                           ),
                         ),
                       ),
@@ -155,14 +158,22 @@ class _HomePageState extends State<HomePage> {
                       CarouselCommunities(),
 
                       SizedBox(height: 20),
-                      Text(
-                        "~ The Boys ~",
-                        style: GoogleFonts.racingSansOne(
-                          textStyle: TextStyle(
-                            color: Color(0xFF010108),
-                            fontSize: MediaQuery.of(context).size.width / 14,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 6.31,
+                      Card(
+                        elevation: 0,
+                        color: Colors.white.withOpacity(0.8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            " ~ The Boys ~ ",
+                            style: GoogleFonts.racingSansOne(
+                              textStyle: TextStyle(
+                                color: Color(0xFF010108),
+                                fontSize:
+                                    MediaQuery.of(context).size.width / 14,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 6.31,
+                              ),
+                            ),
                           ),
                         ),
                       ),
