@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -71,7 +73,7 @@ class _PetrolPageState extends State<PetrolPage> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                child: StreamBuilder(
                   stream: _petrol.snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
@@ -81,13 +83,12 @@ class _PetrolPageState extends State<PetrolPage> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator());
                     }
-
                     var documents = snapshot.data!.docs;
-
                     return ListView.builder(
                       itemCount: documents.length,
                       itemBuilder: (context, index) {
-                        var data = documents[index].data();
+                        var data =
+                            documents[index].data() as Map<String, dynamic>;
                         return Column(
                           children: [
                             SizedBox(
