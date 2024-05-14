@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,6 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
+
+String formattedTimestamp(DateTime timestamp) {
+  String formattedDate = DateFormat('MMMM d, y').format(timestamp);
+  String formattedTime = DateFormat('h:mm a').format(timestamp);
+
+  return '$formattedTime On\n$formattedDate';
+}
 
 class CleanPage extends StatelessWidget {
   const CleanPage({Key? key}) : super(key: key);
@@ -72,6 +78,7 @@ class CleanPage extends StatelessWidget {
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('cleaning')
+                    .orderBy('time_stamp', descending: true)
                     .snapshots(),
                 builder: (BuildContext context,
                     AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -122,21 +129,63 @@ class _CleanCardState extends State<CleanCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white.withOpacity(0.8),
       elevation: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Image.network(
-            widget.data['imageUrl'],
-            fit: BoxFit.cover,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                widget.data['imageUrl'],
+                fit: BoxFit.cover,
+                // width: 300,
+                height: 150,
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  } else {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
           ),
           ListTile(
-            title: Text(widget.data['name']),
-            // subtitle: Text(data['time_stamp']),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.data['name'],
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Text(
+                  "  & ${widget.data['cleaned-with']}",
+                  style: TextStyle(fontSize: 15),
+                ),
+              ],
+            ),
+            subtitle: Text(
+              '${formattedTimestamp(widget.data['time_stamp'].toDate())}',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             trailing: SingleChildScrollView(
               child: Column(
                 children: [
-                  Text(widget.data['area']),
+                  Text(
+                    widget.data['area'],
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -191,6 +240,15 @@ class Clean extends StatefulWidget {
 }
 
 class _CleanState extends State<Clean> {
+  String selectedCommunity = "";
+  List<String> communityOptions = [
+    "Dani",
+    "Jega",
+    "Harish",
+    "Deepak",
+    "chandru",
+    "praveen",
+  ];
   final _formKey = GlobalKey<FormState>();
   TextEditingController _titleController = TextEditingController();
   TextEditingController _messageController = TextEditingController();
@@ -243,7 +301,12 @@ class _CleanState extends State<Clean> {
                   height: 20,
                 ),
                 selectedImage != null
-                    ? Image.file(selectedImage!)
+                    ? Image.file(
+                        selectedImage!,
+                        fit: BoxFit.cover,
+                        width: 300,
+                        height: 150,
+                      )
                     : Container(), // Show image preview if selected
                 Container(
                   child: IconButton(
@@ -252,9 +315,10 @@ class _CleanState extends State<Clean> {
                       },
                       icon: const Icon(
                         Icons.add_a_photo,
-                        size: 90,
+                        size: 40,
                       )),
                 ),
+                Text("Click to upload image"),
                 SizedBox(height: 16),
                 TextFormField(
                   controller: _titleController,
@@ -285,28 +349,32 @@ class _CleanState extends State<Clean> {
                   },
                 ),
                 SizedBox(height: 16),
-                TextFormField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
-                        color: Color(0xFF002D56),
-                      ),
+                DropdownButton<String>(
+                  value: selectedCommunity,
+                  hint:
+                      Text("Cleaned with (optional)"), // Hint for the dropdown
+                  items: [
+                    DropdownMenuItem(
+                      value: "",
+                      child: Text(
+                          "Cleaned with  (Optional)"), // Displayed as the first item
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
-                        width: 2.5,
-                        color: Color(0xFF002D56),
-                      ),
-                    ),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                    hintText: "Cleaned With? (optional)",
-                    alignLabelWithHint: true,
-                  ),
+                    ...communityOptions.map((community) {
+                      return DropdownMenuItem<String>(
+                        value: community,
+                        child: Text(community),
+                      );
+                    }).toList(),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCommunity = value!;
+                    });
+                  },
+                  underline: Container(), // Remove the default underline
+                  isExpanded: true,
                 ),
+
                 SizedBox(height: 16),
                 _isUploading
                     ? CircularProgressIndicator() // Show circular progress indicator while uploading
@@ -434,6 +502,7 @@ class _CleanState extends State<Clean> {
         'area': _titleController.text,
         'imageUrl': imageUrl,
         'likes': 0,
+        'cleaned-with': selectedCommunity,
       });
     } catch (e) {
       print('Error sending to Firebase: $e');

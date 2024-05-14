@@ -84,37 +84,42 @@ class FolderDetails extends StatelessWidget {
   static List<List<String>> folderImages = [
     // Folder 1 images
     [
-      'assets/rithvik.png',
-      'assets/rithvik.png',
-      'assets/rithvik.png',
+      'assets/deepak.png',
+      'assets/deepak.png',
+      'assets/deepak.png',
+      'assets/deepak.png',
     ],
     // Folder 2 images
     [
-      'assets/rithvik.png',
-      'assets/rithvik.png',
-      'assets/rithvik.png',
+      'assets/chandru.jpg',
+      'assets/chandru.jpg',
     ],
     // Folder 3 images
     [
-      'assets/rithvik.png',
-      'assets/rithvik.png',
+      'assets/jega.jpg',
+      'assets/jega.jpg',
+      'assets/jega.jpg',
+      'assets/jega.jpg',
     ],
     // Folder 4 images
     [
-      'assets/rithvik.png',
-      'assets/rithvik.png',
-      'assets/rithvik.png',
+      'assets/harish.png',
+      'assets/harish.png',
+      'assets/harish.png',
+      'assets/harish.png',
     ],
     // Folder 5 images
     [
-      'assets/rithvik.png',
-      'assets/rithvik.png',
+      'assets/praveen.png',
+      'assets/praveen.png',
+      'assets/praveen.png',
     ],
     // Folder 6 images
     [
-      'assets/rithvik.png',
-      'assets/rithvik.png',
-      'assets/rithvik.png',
+      'assets/dani.jpg',
+      'assets/dani.jpg',
+      'assets/dani.jpg',
+      'assets/dani.jpg',
     ],
     // Folder 7 images
     [

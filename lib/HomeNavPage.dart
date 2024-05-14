@@ -16,13 +16,20 @@ class HomeNavPage extends StatefulWidget {
 }
 
 class _HomeNavPageState extends State<HomeNavPage> {
+  late PageController _pageController;
   int _currentPage = 0;
-  static final List<Widget> _widgetOptions = <Widget>[
-    HomePage(),
-    CleanPage(),
-    PetrolPage(),
-    SpinWheel(),
-  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentPage);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +47,20 @@ class _HomeNavPageState extends State<HomeNavPage> {
         backgroundColor: Colors.black.withOpacity(0.2),
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: _widgetOptions[_currentPage], // Display the selected widget
+      body: PageView(
+        controller: _pageController,
+        children: <Widget>[
+          HomePage(),
+          CleanPage(),
+          PetrolPage(),
+          SpinWheel(),
+        ],
+        onPageChanged: (int index) {
+          setState(() {
+            _currentPage = index;
+          });
+        },
+      ),
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: Colors.black.withOpacity(0.5),
         items: <TabItem>[
@@ -52,6 +72,11 @@ class _HomeNavPageState extends State<HomeNavPage> {
         onTap: (int index) {
           setState(() {
             _currentPage = index;
+            _pageController.animateToPage(
+              index,
+              duration: Duration(milliseconds: 700),
+              curve: Curves.easeInOut,
+            );
           });
         },
         initialActiveIndex: _currentPage,

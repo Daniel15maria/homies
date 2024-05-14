@@ -70,6 +70,19 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     onPressed: () async {
                       print(MediaQuery.of(context).size.width);
+                      showDialog(
+                        context: context,
+                        barrierDismissible:
+                            false, // Prevents user from dismissing the dialog
+                        builder: (BuildContext context) {
+                          return Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  const Color.fromARGB(255, 247, 243, 243)),
+                            ),
+                          );
+                        },
+                      );
                       await signInWithGoogle();
                       // Navigator.of(context, rootNavigator: true).pop();
                       Navigator.push(
