@@ -1,7 +1,12 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -35,7 +40,7 @@ class CleanPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                '“Make it Clean BOYS” ',
+                '“Make it Clean BOYS”',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: const Color.fromARGB(255, 248, 245, 245)
@@ -73,30 +78,43 @@ class CleanPage extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('cleaning')
-                    .orderBy('time_stamp', descending: true)
-                    .snapshots(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (snapshot.hasError) {
-                    return Text('Something went wrong');
-                  }
-
+            Flexible(
+              child: FutureBuilder<void>(
+                future:
+                    Future.delayed(Duration(seconds: 1)), // Delay for 5 seconds
+                builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return Center(
+                        child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          const Color.fromARGB(255, 247, 243, 243)),
+                    ));
+                  } else {
+                    return StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('cleaning')
+                          .orderBy('time_stamp', descending: true)
+                          .snapshots(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (snapshot.hasError) {
+                          return Text('Something went wrong');
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                        return ListView(
+                          children: snapshot.data!.docs
+                              .map((DocumentSnapshot document) {
+                            Map<String, dynamic> data =
+                                document.data() as Map<String, dynamic>;
+                            return CleanCard(document: document, data: data);
+                          }).toList(),
+                        );
+                      },
+                    );
                   }
-
-                  return ListView(
-                    children:
-                        snapshot.data!.docs.map((DocumentSnapshot document) {
-                      Map<String, dynamic> data =
-                          document.data() as Map<String, dynamic>;
-                      return CleanCard(document: document, data: data);
-                    }).toList(),
-                  );
                 },
               ),
             ),
@@ -348,31 +366,31 @@ class _CleanState extends State<Clean> {
                   },
                 ),
                 SizedBox(height: 16),
-                DropdownButton<String>(
-                  value: selectedCommunity,
-                  hint:
-                      Text("Cleaned with (optional)"), // Hint for the dropdown
-                  items: [
-                    DropdownMenuItem(
-                      value: "",
-                      child: Text(
-                          "Cleaned with  (Optional)"), // Displayed as the first item
-                    ),
-                    ...communityOptions.map((community) {
-                      return DropdownMenuItem<String>(
-                        value: community,
-                        child: Text(community),
-                      );
-                    }).toList(),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCommunity = value!;
-                    });
-                  },
-                  underline: Container(), // Remove the default underline
-                  isExpanded: true,
-                ),
+                Container(
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(10)),
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: DropdownButton<String>(
+                      value: selectedCommunity,
+                      hint: Text(
+                          'Cleaned with (optional)'), // Hint for the dropdown
+                      items: [
+                        ...communityOptions.map((community) {
+                          return DropdownMenuItem<String>(
+                            value: community,
+                            child: Text(community),
+                          );
+                        }).toList(),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCommunity = value!;
+                        });
+                      },
+                      underline: Container(), // Remove the default underline
+                      isExpanded: true,
+                    )),
 
                 SizedBox(height: 16),
                 _isUploading
