@@ -205,8 +205,6 @@ class _PetrolDetailsState extends State<PetrolDetails> {
   void initState() {
     super.initState();
     _fetchUser();
-
-    _fetchUser();
     requestPermission();
     getToken();
     initInfo();

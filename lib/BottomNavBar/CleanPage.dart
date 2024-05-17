@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +12,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 String formattedTimestamp(DateTime timestamp) {
   String formattedDate = DateFormat('MMMM d, y').format(timestamp);
@@ -276,11 +282,17 @@ class _CleanState extends State<Clean> {
   String imageUrl = '';
   late User? _user;
   bool _isUploading = false;
+  String? mtoken = " ";
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
     _fetchUser();
+    requestPermission();
+    getToken();
+    initInfo();
   }
 
   Future<void> _fetchUser() async {
@@ -288,6 +300,147 @@ class _CleanState extends State<Clean> {
     setState(() {
       _user = currentUser;
     });
+  }
+
+  void requestPermission() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true);
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
+      print('User granted provisional permission');
+    } else {
+      print('User denied or not accepted permission');
+    }
+  }
+
+  void getToken() async {
+    await FirebaseMessaging.instance.getToken().then((token) {
+      setState(() {
+        mtoken = token;
+        print("My token is $mtoken");
+      });
+      saveToken(token!);
+    });
+  }
+
+  void saveToken(String token) async {
+    String googleUserName = _user?.displayName ?? 'temp';
+    await FirebaseFirestore.instance
+        .collection("UserTokens")
+        .doc(googleUserName)
+        .set({'token': token});
+  }
+
+  void initInfo() {
+    var androidInitialize =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iOSInitialize = const DarwinInitializationSettings();
+    var initializationSettings =
+        InitializationSettings(android: androidInitialize, iOS: iOSInitialize);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse:
+            (NotificationResponse response) async {
+      try {
+        if (response.payload != null && response.payload!.isNotEmpty) {
+          print('Notification payload: ${response.payload}');
+        }
+      } catch (e) {
+        print('Error handling notification response: $e');
+      }
+      return;
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      print("-------------onMessage--------------");
+      print(
+          "onMessage: ${message.notification?.title}/${message.notification?.body}");
+
+      BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
+        message.notification!.body.toString(),
+        htmlFormatBigText: true,
+        contentTitle: message.notification!.title.toString(),
+        htmlFormatContentTitle: true,
+      );
+
+      AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'dbfood',
+        'dbfood',
+        importance: Importance.max,
+        styleInformation: bigTextStyleInformation,
+        priority: Priority.max,
+        playSound: false,
+      );
+
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: const DarwinNotificationDetails(),
+      );
+
+      await flutterLocalNotificationsPlugin.show(
+        0,
+        message.notification?.title,
+        message.notification?.body,
+        platformChannelSpecifics,
+        payload: message.data['title'],
+      );
+    });
+  }
+
+  void sendPushMessage(String token, String body, String title) async {
+    print('Sending push message...');
+    try {
+      await http.post(
+        Uri.parse("https://fcm.googleapis.com/fcm/send"),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+              'key=AAAAAl1MZyY:APA91bEgx1_uPqDUdL5wSkIFFvmASSVJO2jXHXMtQ-BfiIpNaFIiaAAjaH_cooXlmsAAV7rfp1bYRHEB2AE7HjyZPIvVH_tfmdzQOUSfRjD1vIwqAMOTlO17jKoOMqlt0Tmg9obUCyjN'
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'status': 'done',
+              'body': body,
+              'title': title,
+            },
+            'notification': <String, dynamic>{
+              'title': title,
+              'body': body,
+              'android_channel_id': 'dbfood'
+            },
+            'to': token,
+          },
+        ),
+      );
+      print('Push message sent successfully');
+    } catch (e) {
+      print("push notification error: " + e.toString());
+    }
+  }
+
+  Future<void> sendNotificationsToAllUsers(String body, String title) async {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection("UserTokens").get();
+      for (var doc in snapshot.docs) {
+        String token = doc['token'];
+        sendPushMessage(token, body, title);
+      }
+    } catch (e) {
+      print("Error fetching user tokens: $e");
+    }
   }
 
   @override
@@ -366,31 +519,30 @@ class _CleanState extends State<Clean> {
                   },
                 ),
                 SizedBox(height: 16),
-                Container(
-                    decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(10)),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: DropdownButton<String>(
-                      value: selectedCommunity,
-                      hint: Text(
-                          'Cleaned with (optional)'), // Hint for the dropdown
-                      items: [
-                        ...communityOptions.map((community) {
-                          return DropdownMenuItem<String>(
-                            value: community,
-                            child: Text(community),
-                          );
-                        }).toList(),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCommunity = value!;
-                        });
-                      },
-                      underline: Container(), // Remove the default underline
-                      isExpanded: true,
-                    )),
+                DropdownButton<String>(
+                  value: selectedCommunity,
+                  hint: Text("Cleaned With"), // Hint for the dropdown
+                  items: [
+                    DropdownMenuItem(
+                      value: "",
+                      child:
+                          Text("Cleaned with"), // Displayed as the first item
+                    ),
+                    ...communityOptions.map((community) {
+                      return DropdownMenuItem<String>(
+                        value: community,
+                        child: Text(community),
+                      );
+                    }).toList(),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCommunity = value!;
+                    });
+                  },
+                  underline: Container(), // Remove the default underline
+                  isExpanded: true,
+                ),
 
                 SizedBox(height: 16),
                 _isUploading
@@ -410,6 +562,13 @@ class _CleanState extends State<Clean> {
                               _isUploading = true;
                             });
                             await sendToFirebase();
+                            String googleUserName =
+                                _user?.displayName ?? 'No Name';
+                            String place = _titleController.text;
+                            String notiBody = "cleaned :" + place;
+                            String notiTitle = "Cleaned By " + googleUserName;
+                            await sendNotificationsToAllUsers(
+                                notiBody, notiTitle);
                             setState(() {
                               _isUploading = false;
                             });
