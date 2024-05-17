@@ -1,8 +1,12 @@
+// ignore_for_file: prefer_const_constructors, prefer_interpolation_to_compose_strings, avoid_print
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homies/BottomNavBar/CleanPage.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 String formattedTimestamp(DateTime timestamp) {
   String formattedDate = DateFormat('MMMM d, y').format(timestamp);
@@ -26,7 +30,7 @@ class _NotifyPageState extends State<NotifyPage> {
   void initState() {
     super.initState();
     _buttonStates = List.filled(10, false);
-    _notifyStream = _notify.snapshots();
+    _notifyStream = _notify.orderBy('time_stamp', descending: true).snapshots();
   }
 
   @override
@@ -184,11 +188,145 @@ class _AddNotifyState extends State<AddNotify> {
     "praveen",
   ];
   late User? _user;
+  String? mtoken = " ";
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
     _fetchUser();
+    requestPermission();
+    getToken();
+    initInfo();
+  }
+
+  void requestPermission() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true);
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
+      print('User granted provisional permission');
+    } else {
+      print('User denied or not accepted permission');
+    }
+  }
+
+  void getToken() async {
+    await FirebaseMessaging.instance.getToken().then((token) {
+      setState(() {
+        mtoken = token;
+        print("My token is $mtoken");
+      });
+      saveToken(token!);
+    });
+  }
+
+  void saveToken(String token) async {
+    String googleUserName = _user?.displayName ?? 'temp';
+    await FirebaseFirestore.instance
+        .collection("UserTokens")
+        .doc(googleUserName)
+        .set({'token': token});
+  }
+
+  void initInfo() {
+    var androidInitialize =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var iOSInitialize = const DarwinInitializationSettings();
+    var initializationSettings =
+        InitializationSettings(android: androidInitialize, iOS: iOSInitialize);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse:
+            (NotificationResponse response) async {
+      try {
+        if (response.payload != null && response.payload!.isNotEmpty) {
+          print('Notification payload: ${response.payload}');
+        }
+      } catch (e) {
+        print('Error handling notification response: $e');
+      }
+      return;
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      print("-------------onMessage--------------");
+      print(
+          "onMessage: ${message.notification?.title}/${message.notification?.body}");
+
+      BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
+        message.notification!.body.toString(),
+        htmlFormatBigText: true,
+        contentTitle: message.notification!.title.toString(),
+        htmlFormatContentTitle: true,
+      );
+
+      AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'dbfood',
+        'dbfood',
+        importance: Importance.max,
+        styleInformation: bigTextStyleInformation,
+        priority: Priority.max,
+        playSound: false,
+      );
+
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: const DarwinNotificationDetails(),
+      );
+
+      await flutterLocalNotificationsPlugin.show(
+        0,
+        message.notification?.title,
+        message.notification?.body,
+        platformChannelSpecifics,
+        payload: message.data['title'],
+      );
+    });
+  }
+
+  void sendPushMessage(String token, String body, String title) async {
+    print('Sending push message...');
+    try {
+      await http.post(
+        Uri.parse("https://fcm.googleapis.com/fcm/send"),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+              'key=AAAAAl1MZyY:APA91bEgx1_uPqDUdL5wSkIFFvmASSVJO2jXHXMtQ-BfiIpNaFIiaAAjaH_cooXlmsAAV7rfp1bYRHEB2AE7HjyZPIvVH_tfmdzQOUSfRjD1vIwqAMOTlO17jKoOMqlt0Tmg9obUCyjN'
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'status': 'done',
+              'body': body,
+              'title': title,
+            },
+            'notification': <String, dynamic>{
+              'title': title,
+              'body': body,
+              'android_channel_id': 'dbfood'
+            },
+            'to': token,
+          },
+        ),
+      );
+      print('Push message sent successfully');
+    } catch (e) {
+      print("push notification error: " + e.toString());
+    }
   }
 
   Future<void> _fetchUser() async {
@@ -196,6 +334,20 @@ class _AddNotifyState extends State<AddNotify> {
     setState(() {
       _user = currentUser;
     });
+    print('Fetched user: ${_user?.displayName}');
+  }
+
+  Future<void> sendNotificationsToAllUsers(String body, String title) async {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection("UserTokens").get();
+      for (var doc in snapshot.docs) {
+        String token = doc['token'];
+        sendPushMessage(token, body, title);
+      }
+    } catch (e) {
+      print("Error fetching user tokens: $e");
+    }
   }
 
   @override
@@ -371,13 +523,23 @@ class _AddNotifyState extends State<AddNotify> {
                           'photoUrl': userPhotoUrl,
                           'time_stamp': now
                         });
+                        print('Data added to Firebase');
+                        setState(() {
+                          selectedCommunity = "";
+                        });
+
+                        // Prepare notification content
+                        String notiBody =
+                            "₹" + amountForEach.toString() + " to " + sendTo;
+                        String notiTitle = "Reminder to: " + reason;
+
+                        // Send notifications to all users
+                        await sendNotificationsToAllUsers(notiBody, notiTitle);
+
                         // Reset form fields after successful submission
                         _reasonController.clear();
                         _totalAmountController.clear();
                         _amountForEachController.clear();
-                        setState(() {
-                          selectedCommunity = "";
-                        });
                         Navigator.pop(context);
                       } catch (e) {
                         print('Error adding data to Firebase: $e');
